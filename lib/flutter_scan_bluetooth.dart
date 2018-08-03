@@ -16,6 +16,11 @@ class BluetoothDevice {
 
   @override
   int get hashCode => name.hashCode ^ address.hashCode;
+
+  @override
+  String toString() {
+    return 'BluetoothDevice{name: $name, address: $address, paired: $paired, nearby: $nearby}';
+  }
 }
 
 class FlutterScanBluetooth {
@@ -33,8 +38,8 @@ class FlutterScanBluetooth {
 
   static List<BluetoothDevice> pairedDevices = [];
 
-  static StreamController<BluetoothDevice> _controller = StreamController<BluetoothDevice>();
-  static StreamController<bool> _scanStopped = StreamController<bool>();
+  static StreamController<BluetoothDevice> _controller = StreamController.broadcast();
+  static StreamController<bool> _scanStopped = StreamController.broadcast();
 
   static Stream<BluetoothDevice> get devices => _controller.stream;
   static Stream<bool> get scanStopped => _scanStopped.stream;

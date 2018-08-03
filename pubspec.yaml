@@ -1,6 +1,6 @@
 name: flutter_scan_bluetooth
 description: Flutter plugin to scan Bluetooth devices.
-version: 0.0.1
+version: 0.0.3
 author: jaumard <jimmy@kiwi-bop.com>
 homepage: https://github.com/kiwi-bop/flutter_scan_bluetooth
 
