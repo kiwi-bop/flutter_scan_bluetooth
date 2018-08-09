@@ -17,6 +17,13 @@ class BluetoothDevice {
   @override
   int get hashCode => name.hashCode ^ address.hashCode;
 
+  Map<String, dynamic> toMap() {
+    return  {
+      'name': name,
+      'address': address
+    };
+  }
+
   @override
   String toString() {
     return 'BluetoothDevice{name: $name, address: $address, paired: $paired, nearby: $nearby}';
@@ -53,7 +60,7 @@ class FlutterScanBluetooth {
     }
   }
 
-  static Future<void> get stopScan => _channel.invokeMethod('action_stop_scan');
+  static Future<void> stopScan() => _channel.invokeMethod('action_stop_scan');
 
   static void _newDevice(device) {
     _controller.add(BluetoothDevice(
