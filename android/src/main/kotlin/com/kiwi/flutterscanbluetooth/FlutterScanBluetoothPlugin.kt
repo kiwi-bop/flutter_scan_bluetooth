@@ -24,8 +24,8 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
 
     companion object {
         private val TAG = FlutterScanBluetoothPlugin::class.java.name!!
-        private const val REQUEST_BLUETOOTH = 1
-        private const val REQUEST_PERMISSION = 2
+        private const val REQUEST_BLUETOOTH = 7338
+        private const val REQUEST_PERMISSION = 242346
         private const val ACTION_NEW_DEVICE = "action_new_device"
         private const val ACTION_START_SCAN = "action_start_scan"
         private const val ACTION_STOP_SCAN = "action_stop_scan"
