@@ -118,8 +118,8 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
 
     private fun stopScan(result: Result?) {
         adapter?.cancelDiscovery()
+        channel.invokeMethod(ACTION_SCAN_STOPPED, null)
         try {
-            channel.invokeMethod(ACTION_SCAN_STOPPED, null)
             activity.unregisterReceiver(receiver)
         } catch (e: IllegalArgumentException) {
             throw RuntimeException("Cannot stop Bluetooth scan before starting.")

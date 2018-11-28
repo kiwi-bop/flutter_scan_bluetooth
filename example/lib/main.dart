@@ -27,6 +27,7 @@ class _MyAppState extends State<MyApp> {
     FlutterScanBluetooth.scanStopped.listen((device) {
       setState(() {
         _scanning = false;
+        _data += 'scan stopped\n';
       });
     });
   }
@@ -48,7 +49,7 @@ class _MyAppState extends State<MyApp> {
                 child: RaisedButton(child: Text(_scanning ? 'Stop scan' : 'Start scan'), onPressed: () async {
                   try {
                     if(_scanning) {
-                      await FlutterScanBluetooth.stopScan;
+                      await FlutterScanBluetooth.stopScan();
                       debugPrint("scanning stoped");
                     }
                     else {
@@ -57,7 +58,7 @@ class _MyAppState extends State<MyApp> {
                     }
                     setState(() {
                       if(!_scanning) {
-                        _data = '';
+                        //_data = '';
                       }
                       _scanning = !_scanning;
                     });
