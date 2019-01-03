@@ -14,17 +14,18 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   String _data = '';
   bool _scanning = false;
+  FlutterScanBluetooth _bluetooth = FlutterScanBluetooth();
 
   @override
   void initState() {
     super.initState();
 
-    FlutterScanBluetooth.devices.listen((device) {
+    _bluetooth.devices.listen((device) {
       setState(() {
         _data += device.name+'\n';
       });
     });
-    FlutterScanBluetooth.scanStopped.listen((device) {
+    _bluetooth.scanStopped.listen((device) {
       setState(() {
         _scanning = false;
         _data += 'scan stopped\n';
@@ -49,19 +50,19 @@ class _MyAppState extends State<MyApp> {
                 child: RaisedButton(child: Text(_scanning ? 'Stop scan' : 'Start scan'), onPressed: () async {
                   try {
                     if(_scanning) {
-                      await FlutterScanBluetooth.stopScan();
+                      await _bluetooth.stopScan();
                       debugPrint("scanning stoped");
+                      setState(() {
+                        _data = '';
+                      });
                     }
                     else {
-                      await FlutterScanBluetooth.startScan(pairedDevices: true);
+                      await _bluetooth.startScan(pairedDevices: true);
                       debugPrint("scanning started");
+                      setState(() {
+                        _scanning = true;
+                      });
                     }
-                    setState(() {
-                      if(!_scanning) {
-                        //_data = '';
-                      }
-                      _scanning = !_scanning;
-                    });
                   } on PlatformException catch (e) {
                     debugPrint(e.toString());
                   }

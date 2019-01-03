@@ -18,10 +18,7 @@ class BluetoothDevice {
   int get hashCode => name.hashCode ^ address.hashCode;
 
   Map<String, dynamic> toMap() {
-    return  {
-      'name': name,
-      'address': address
-    };
+    return {'name': name, 'address': address};
   }
 
   @override
@@ -31,8 +28,16 @@ class BluetoothDevice {
 }
 
 class FlutterScanBluetooth {
-  static MethodChannel _channel = const MethodChannel('flutter_scan_bluetooth')
-    ..setMethodCallHandler((methodCall) {
+  static final _singleton = FlutterScanBluetooth._();
+  final MethodChannel _channel = const MethodChannel('flutter_scan_bluetooth');
+  final List<BluetoothDevice> _pairedDevices = [];
+  final StreamController<BluetoothDevice> _controller = StreamController.broadcast();
+  final StreamController<bool> _scanStopped = StreamController.broadcast();
+
+  factory FlutterScanBluetooth() => _singleton;
+
+  FlutterScanBluetooth._() {
+    _channel.setMethodCallHandler((methodCall) {
       switch (methodCall.method) {
         case 'action_new_device':
           _newDevice(methodCall.arguments);
@@ -42,32 +47,34 @@ class FlutterScanBluetooth {
           break;
       }
     });
+  }
 
-  static List<BluetoothDevice> pairedDevices = [];
+  Stream<BluetoothDevice> get devices => _controller.stream;
 
-  static StreamController<BluetoothDevice> _controller = StreamController.broadcast();
-  static StreamController<bool> _scanStopped = StreamController.broadcast();
+  Stream<bool> get scanStopped => _scanStopped.stream;
 
-  static Stream<BluetoothDevice> get devices => _controller.stream;
-  static Stream<bool> get scanStopped => _scanStopped.stream;
-
-  static Future<void> startScan({pairedDevices = false}) async {
+  Future<void> startScan({pairedDevices = false}) async {
     final bondedDevices = await _channel.invokeMethod('action_start_scan', pairedDevices);
     for (var device in bondedDevices) {
       final d = BluetoothDevice(device['name'], device['address'], paired: true);
-      FlutterScanBluetooth.pairedDevices.add(d);
+      _pairedDevices.add(d);
       _controller.add(d);
     }
   }
 
-  static Future<void> stopScan() => _channel.invokeMethod('action_stop_scan');
+  Future<void> close() async {
+    await _scanStopped.close();
+    await _controller.close();
+  }
 
-  static void _newDevice(device) {
+  Future<void> stopScan() => _channel.invokeMethod('action_stop_scan');
+
+  void _newDevice(device) {
     _controller.add(BluetoothDevice(
       device['name'],
       device['address'],
       nearby: true,
-      paired: pairedDevices.firstWhere((item) => item.address == device['address'], orElse: () => null) != null,
+      paired: _pairedDevices.firstWhere((item) => item.address == device['address'], orElse: () => null) != null,
     ));
   }
 }
