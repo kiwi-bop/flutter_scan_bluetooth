@@ -20,7 +20,7 @@ class _MyAppState extends State<MyApp> {
 
     _bluetooth.devices.listen((device) {
       setState(() {
-        _data += device.name+'\n';
+        _data += device.name+' (${device.address})\n';
       });
     });
     _bluetooth.scanStopped.listen((device) {
@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
                       });
                     }
                     else {
-                      await _bluetooth.startScan(pairedDevices: true);
+                      await _bluetooth.startScan(pairedDevices: false);
                       debugPrint("scanning started");
                       setState(() {
                         _scanning = true;

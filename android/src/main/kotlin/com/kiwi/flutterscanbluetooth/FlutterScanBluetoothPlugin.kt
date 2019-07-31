@@ -4,12 +4,14 @@ import android.Manifest
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
+import android.bluetooth.BluetoothDevice.DEVICE_TYPE_LE
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.os.Build
 import androidx.core.app.ActivityCompat
 import android.util.Log
 import io.flutter.plugin.common.MethodCall
@@ -67,7 +69,13 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
 
     private fun toMap(device: BluetoothDevice): Map<String, String> {
         val map = HashMap<String, String>()
-        map["name"] = device.name ?: device.address
+        var name = device.name ?: device.address
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            name += if(device.type == DEVICE_TYPE_LE) "-LE" else ""
+        }
+
+        map["name"] = name
         map["address"] = device.address
         return map
     }
@@ -130,7 +138,7 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
     private fun scan(result: Result, returnBondedDevices: Boolean = false) {
         if (adapter!!.isEnabled) {
             if (activity.checkCallingOrSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
+                    == PERMISSION_GRANTED) {
                 if (adapter!!.isDiscovering) {
                     // Bluetooth is already in modo discovery mode, we cancel to restart it again
                     stopScan(null)
