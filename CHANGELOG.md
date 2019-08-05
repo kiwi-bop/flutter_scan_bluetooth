@@ -1,3 +1,7 @@
+## 1.0.1+1
+
+* suffix LE device with -LE only if not present on Android 
+
 ## 1.0.1
 
 * suffix LE device with -LE on Android 

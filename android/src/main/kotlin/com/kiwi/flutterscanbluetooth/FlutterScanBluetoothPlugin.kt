@@ -71,7 +71,7 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
         val map = HashMap<String, String>()
         var name = device.name ?: device.address
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && !name.contains("-LE")) {
             name += if(device.type == DEVICE_TYPE_LE) "-LE" else ""
         }
 
