@@ -1,16 +1,20 @@
 package com.kiwi.flutterscanbluetooth
 
 import android.Manifest
+import android.Manifest.permission.BLUETOOTH
+import android.Manifest.permission.BLUETOOTH_ADMIN
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothDevice.DEVICE_TYPE_LE
+import android.bluetooth.BluetoothManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.content.pm.PackageManager.PERMISSION_GRANTED
+import android.location.LocationManager
 import android.os.Build
 import androidx.core.app.ActivityCompat
 import android.util.Log
@@ -47,7 +51,12 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
         }
     }
 
-    private var adapter: BluetoothAdapter? = BluetoothAdapter.getDefaultAdapter()
+    private var adapter: BluetoothAdapter? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        (activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
+    } else {
+        BluetoothAdapter.getDefaultAdapter()
+    }
+
     private var pendingScanResult: Result? = null
     private val receiver = object : BroadcastReceiver() {
 
@@ -96,10 +105,19 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?): Boolean {
         return when (requestCode) {
             REQUEST_BLUETOOTH -> {
-                if (requestCode == Activity.RESULT_OK) {
+                if (resultCode == Activity.RESULT_OK) {
                     scan(pendingScanResult!!)
                 } else {
                     pendingScanResult!!.error("error_bluetooth_disabled", "Bluetooth is disabled", null)
+                    pendingScanResult = null
+                }
+                true
+            }
+            GpsUtils.GPS_REQUEST-> {
+                if (GpsUtils(activity).isGpsEnabled) {
+                    scan(pendingScanResult!!)
+                } else {
+                    pendingScanResult!!.error("error_no_gps", "Gps need to be turned on to scan BT devices", null)
                     pendingScanResult = null
                 }
                 true
@@ -138,27 +156,38 @@ class FlutterScanBluetoothPlugin(private val activity: Activity,
     private fun scan(result: Result, returnBondedDevices: Boolean = false) {
         if (adapter!!.isEnabled) {
             if (activity.checkCallingOrSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
+                    == PERMISSION_GRANTED && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN)
+                    == PERMISSION_GRANTED&& activity.checkCallingOrSelfPermission(BLUETOOTH)
                     == PERMISSION_GRANTED) {
-                if (adapter!!.isDiscovering) {
-                    // Bluetooth is already in modo discovery mode, we cancel to restart it again
-                    stopScan(null)
-                }
-                val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-                filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-                activity.registerReceiver(receiver, filter)
 
-                adapter!!.startDiscovery()
-                var bondedDevices: List<Map<String, String>> = arrayListOf()
-                if (returnBondedDevices) {
-                    bondedDevices = adapter!!.bondedDevices.mapNotNull {
-                        toMap(it)
+                GpsUtils(activity).turnGPSOn {
+                    if (it) {
+                        if (adapter!!.isDiscovering) {
+                            // Bluetooth is already in modo discovery mode, we cancel to restart it again
+                            stopScan(null)
+                        }
+                        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+                        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+                        activity.registerReceiver(receiver, filter)
+
+                        adapter!!.startDiscovery()
+                        var bondedDevices: List<Map<String, String>> = arrayListOf()
+                        if (returnBondedDevices) {
+                            bondedDevices = adapter!!.bondedDevices.mapNotNull {
+                                toMap(it)
+                            }
+                        }
+                        result.success(bondedDevices)
+                    } else {
+                        result.error("error_no_gps", "Gps need to be turned on to scan BT devices", null)
                     }
+                    pendingScanResult = null
                 }
-                result.success(bondedDevices)
-                pendingScanResult = null
+
+                pendingScanResult = result
             } else {
                 pendingScanResult = result
-                ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), REQUEST_PERMISSION)
+                ActivityCompat.requestPermissions(activity, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN), REQUEST_PERMISSION)
             }
         } else {
             val enableBT = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
