@@ -10,8 +10,12 @@ dependencies:
 
 flutter:
   plugin:
-    androidPackage: com.kiwi.flutterscanbluetooth
-    pluginClass: FlutterScanBluetoothPlugin
+    platforms:
+      android:
+        package: com.kiwi.flutterscanbluetooth
+        pluginClass: FlutterScanBluetoothPlugin
+      ios:
+        pluginClass: FlutterScanBluetoothPlugin
 
 environment:
     sdk: ">=2.0.0 <3.0.0"
