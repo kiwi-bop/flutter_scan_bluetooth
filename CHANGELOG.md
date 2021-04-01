@@ -1,3 +1,8 @@
+## 1.2.0
+
+* Fix bluethooth scan on android Q and more
+* move to embedded v2 on android
+
 ## 1.1.0
 
 * Add GPS check before scanning on Android to avoid scan discovery problems
