@@ -14,9 +14,9 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/flutter_scan_bluetooth/ios"
 
 SPEC CHECKSUMS:
-  Flutter: 9d0fac939486c9aba2809b7982dfdbb47a7b0296
-  flutter_scan_bluetooth: e3a2bda561401e7dbfb53468cdbed0e1ea4a8245
+  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  flutter_scan_bluetooth: b67b0b1bc37f79f2f2ed46463ad49bf74cfd5975
 
 PODFILE CHECKSUM: ec81a62fe73c7b29f2764dd3fe8c221958ac6739
 
-COCOAPODS: 1.5.3
+COCOAPODS: 1.10.1
