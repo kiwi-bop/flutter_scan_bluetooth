@@ -56,7 +56,7 @@ class FlutterScanBluetoothPlugin
     }
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        val channel = MethodChannel(binding.binaryMessenger, "flutter_scan_bluetooth")
+        channel = MethodChannel(binding.binaryMessenger, "flutter_scan_bluetooth")
         channel.setMethodCallHandler(this)
     }
 
