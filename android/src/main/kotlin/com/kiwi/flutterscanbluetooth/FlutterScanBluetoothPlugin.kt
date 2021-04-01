@@ -1,8 +1,7 @@
 package com.kiwi.flutterscanbluetooth
 
 import android.Manifest
-import android.Manifest.permission.BLUETOOTH
-import android.Manifest.permission.BLUETOOTH_ADMIN
+import android.Manifest.permission.*
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
@@ -47,8 +46,10 @@ class FlutterScanBluetoothPlugin
 
         override fun onReceive(context: Context, intent: Intent) {
             if (BluetoothDevice.ACTION_FOUND == intent.action) {
-                val device: BluetoothDevice = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
-                channel.invokeMethod(ACTION_NEW_DEVICE, toMap(device))
+                val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                if (device != null) {
+                    channel.invokeMethod(ACTION_NEW_DEVICE, toMap(device))
+                }
             } else if (BluetoothAdapter.ACTION_DISCOVERY_FINISHED == intent.action) {
                 channel.invokeMethod(ACTION_SCAN_STOPPED, null)
             }
@@ -90,7 +91,7 @@ class FlutterScanBluetoothPlugin
 
     private var adapter: BluetoothAdapter? = null
 
-    fun onViewDestroy() {
+    private fun onViewDestroy() {
         if (adapter!!.isDiscovering) {
             stopScan(null)
         }
@@ -175,12 +176,13 @@ class FlutterScanBluetoothPlugin
 
     private fun scan(result: Result, returnBondedDevices: Boolean = false) {
         if (adapter!!.isEnabled) {
-            if (activityBinding.activity.checkCallingOrSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION)
-                    == PERMISSION_GRANTED && activityBinding.activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN)
-                    == PERMISSION_GRANTED&& activityBinding.activity.checkCallingOrSelfPermission(BLUETOOTH)
-                    == PERMISSION_GRANTED) {
+            val activity = activityBinding.activity
 
-                GpsUtils(activityBinding.activity).turnGPSOn {
+            if (activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
+                    && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
+                    && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED) {
+
+                GpsUtils(activity).turnGPSOn {
                     if (it) {
                         if (adapter!!.isDiscovering) {
                             // Bluetooth is already in modo discovery mode, we cancel to restart it again
@@ -188,13 +190,13 @@ class FlutterScanBluetoothPlugin
                         }
                         val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
                         filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-                        activityBinding.activity.registerReceiver(receiver, filter)
+                        activity.registerReceiver(receiver, filter)
 
                         adapter!!.startDiscovery()
                         var bondedDevices: List<Map<String, String>> = arrayListOf()
                         if (returnBondedDevices) {
-                            bondedDevices = adapter!!.bondedDevices.mapNotNull {
-                                toMap(it)
+                            bondedDevices = adapter!!.bondedDevices.mapNotNull { device ->
+                                toMap(device)
                             }
                         }
                         result.success(bondedDevices)
@@ -207,7 +209,7 @@ class FlutterScanBluetoothPlugin
                 pendingScanResult = result
             } else {
                 pendingScanResult = result
-                ActivityCompat.requestPermissions(activityBinding.activity, arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN), REQUEST_PERMISSION)
+                ActivityCompat.requestPermissions(activityBinding.activity, arrayOf(ACCESS_FINE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN), REQUEST_PERMISSION)
             }
         } else {
             val enableBT = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)

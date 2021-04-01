@@ -46,6 +46,7 @@ class FlutterScanBluetooth {
           _scanStopped.add(true);
           break;
       }
+      return null;
     });
   }
 
