@@ -25,12 +25,12 @@ import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
 
-class FlutterScanBluetoothPlugin()
+class FlutterScanBluetoothPlugin
     : FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener,
         PluginRegistry.RequestPermissionsResultListener {
 
     companion object {
-        private val TAG = FlutterScanBluetoothPlugin::class.java.name!!
+        private val TAG = FlutterScanBluetoothPlugin::class.java.name
         private const val REQUEST_BLUETOOTH = 7338
         private const val REQUEST_PERMISSION = 242346
         private const val ACTION_NEW_DEVICE = "action_new_device"
@@ -72,6 +72,11 @@ class FlutterScanBluetoothPlugin()
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activityBinding = binding
+        adapter = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+            (activityBinding.activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
+        } else {
+            BluetoothAdapter.getDefaultAdapter()
+        }
         binding.addRequestPermissionsResultListener(this)
     }
 
@@ -80,13 +85,10 @@ class FlutterScanBluetoothPlugin()
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
+        channel.setMethodCallHandler(null)
     }
 
-    private var adapter: BluetoothAdapter? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
-        (activityBinding.activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
-    } else {
-        BluetoothAdapter.getDefaultAdapter()
-    }
+    private var adapter: BluetoothAdapter? = null
 
     fun onViewDestroy() {
         if (adapter!!.isDiscovering) {
