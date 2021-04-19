@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:collection/collection.dart';
 import 'package:flutter/services.dart';
 
 class BluetoothDevice {
@@ -37,7 +38,7 @@ class FlutterScanBluetooth {
   factory FlutterScanBluetooth() => _singleton;
 
   FlutterScanBluetooth._() {
-    _channel.setMethodCallHandler((methodCall) {
+    _channel.setMethodCallHandler((methodCall) async {
       switch (methodCall.method) {
         case 'action_new_device':
           _newDevice(methodCall.arguments);
@@ -75,7 +76,7 @@ class FlutterScanBluetooth {
       device['name'],
       device['address'],
       nearby: true,
-      paired: _pairedDevices.firstWhere((item) => item.address == device['address'], orElse: () => null) != null,
+      paired: _pairedDevices.firstWhereOrNull((item) => item.address == device['address']) != null,
     ));
   }
 }

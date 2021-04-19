@@ -45,7 +45,7 @@ class _MyAppState extends State<MyApp> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Center(
-                child: RaisedButton(child: Text(_scanning ? 'Stop scan' : 'Start scan'), onPressed: () async {
+                child: ElevatedButton(child: Text(_scanning ? 'Stop scan' : 'Start scan'), onPressed: () async {
                   try {
                     if(_scanning) {
                       await _bluetooth.stopScan();
