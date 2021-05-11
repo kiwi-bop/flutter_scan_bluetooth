@@ -54,9 +54,9 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
             return result(FlutterError.init(code: "error_no_bt", message: nil, details: nil))
         }
         else if(bluetoothState == .poweredOff) {
-            return result(FlutterError.init(code: "error_bt_off", message: nil, details: nil))
+            return result(FlutterError.init(code: "error_bluetooth_disabled", message: nil, details: nil))
         }
-        print(call.method);
+        
         switch call.method {
         case "action_start_scan":
             if(centralManager.isScanning) {
@@ -76,6 +76,19 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
             break;
         case "action_stop_scan":
             stopScan()
+            result(nil)
+            break;
+        case "action_request_permissions":
+            if(bluetoothState == .unauthorized) {
+                if #available(iOS 13.0, *) {
+                    switch centralManager.authorization {
+                    case .denied, .restricted, .notDetermined:
+                        return result(FlutterError.init(code: "error_no_permission", message: nil, details: nil))
+                    case .allowedAlways:
+                        break;
+                    }
+                }
+            }
             result(nil)
             break;
         default:
