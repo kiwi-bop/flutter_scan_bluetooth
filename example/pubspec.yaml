@@ -1,5 +1,6 @@
 name: flutter_scan_bluetooth_example
 description: Demonstrates how to use the flutter_scan_bluetooth plugin.
+version: 1.0.0+1
 
 environment:
   sdk: ">=2.2.2 <3.0.0"
