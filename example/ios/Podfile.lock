@@ -4,19 +4,19 @@ PODS:
     - Flutter
 
 DEPENDENCIES:
-  - Flutter (from `.symlinks/flutter/ios`)
+  - Flutter (from `Flutter`)
   - flutter_scan_bluetooth (from `.symlinks/plugins/flutter_scan_bluetooth/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
-    :path: ".symlinks/flutter/ios"
+    :path: Flutter
   flutter_scan_bluetooth:
     :path: ".symlinks/plugins/flutter_scan_bluetooth/ios"
 
 SPEC CHECKSUMS:
-  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
   flutter_scan_bluetooth: b67b0b1bc37f79f2f2ed46463ad49bf74cfd5975
 
-PODFILE CHECKSUM: ec81a62fe73c7b29f2764dd3fe8c221958ac6739
+PODFILE CHECKSUM: aafe91acc616949ddb318b77800a7f51bffa2a4c
 
 COCOAPODS: 1.10.1
