@@ -55,6 +55,10 @@ class FlutterScanBluetooth {
 
   Stream<bool> get scanStopped => _scanStopped.stream;
 
+  Future<void> requestPermissions() async {
+    await _channel.invokeMethod('action_request_permissions');
+  }
+
   Future<void> startScan({pairedDevices = false}) async {
     final bondedDevices = await _channel.invokeMethod('action_start_scan', pairedDevices);
     for (var device in bondedDevices) {

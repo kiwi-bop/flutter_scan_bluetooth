@@ -36,12 +36,17 @@ class FlutterScanBluetoothPlugin
         private const val ACTION_START_SCAN = "action_start_scan"
         private const val ACTION_STOP_SCAN = "action_stop_scan"
         private const val ACTION_SCAN_STOPPED = "action_scan_stopped"
+        private const val ACTION_REQUEST_PERMISSIONS = "action_request_permissions"
     }
 
-    private lateinit var activityBinding: ActivityPluginBinding
-    private lateinit var channel: MethodChannel
+    private lateinit var activityBinding: ActivityPluginBinding;
+    private lateinit var channel: MethodChannel;
 
-    private var pendingScanResult: Result? = null
+    private var adapter: BluetoothAdapter? = null;
+
+    private var onPermissionGranted: (() -> Unit)? = null;
+    private var onPermissionRefused: ((code: String, message: String) -> Unit)? = null;
+
     private val receiver = object : BroadcastReceiver() {
 
         override fun onReceive(context: Context, intent: Intent) {
@@ -89,8 +94,6 @@ class FlutterScanBluetoothPlugin
         channel.setMethodCallHandler(null)
     }
 
-    private var adapter: BluetoothAdapter? = null
-
     private fun onViewDestroy() {
         if (adapter!!.isDiscovering) {
             stopScan(null)
@@ -113,10 +116,10 @@ class FlutterScanBluetoothPlugin
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
         return if (requestCode == REQUEST_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
-                scan(pendingScanResult!!)
+                startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!);
+
             } else {
-                pendingScanResult!!.error("error_no_permission", "Permission must be granted", null)
-                pendingScanResult = null
+                onPermissionRefused!!("error_no_permission",  "Permission must be granted");
             }
             true
         } else
@@ -127,19 +130,19 @@ class FlutterScanBluetoothPlugin
         return when (requestCode) {
             REQUEST_BLUETOOTH -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    scan(pendingScanResult!!)
+                    startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!);
+
                 } else {
-                    pendingScanResult!!.error("error_bluetooth_disabled", "Bluetooth is disabled", null)
-                    pendingScanResult = null
+                    onPermissionRefused!!("error_bluetooth_disabled", "Bluetooth is disabled")
                 }
                 true
             }
             GpsUtils.GPS_REQUEST-> {
                 if (GpsUtils(activityBinding.activity).isGpsEnabled) {
-                    scan(pendingScanResult!!)
+                    startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!);
+
                 } else {
-                    pendingScanResult!!.error("error_no_gps", "Gps need to be turned on to scan BT devices", null)
-                    pendingScanResult = null
+                    onPermissionRefused!!("error_no_gps", "Gps need to be turned on to scan BT devices")
                 }
                 true
             }
@@ -159,7 +162,51 @@ class FlutterScanBluetoothPlugin
         when (call.method) {
             ACTION_START_SCAN -> scan(result, call.arguments as Boolean)
             ACTION_STOP_SCAN -> stopScan(result)
+            ACTION_REQUEST_PERMISSIONS -> validatePermissions(result)
             else -> result.notImplemented()
+        }
+    }
+
+    private fun validatePermissions(result: Result) {
+        startPermissionValidation({
+            result.success(null);
+
+        }, {code: String, message: String ->
+            result.error(code, message, null);
+            onPermissionGranted = null;
+            onPermissionRefused = null;
+        });
+    }
+
+    private fun startPermissionValidation(onGranted: (() -> Unit), onRefused: ((code: String, message: String) -> Unit)) {
+
+        if (adapter!!.isEnabled) {
+            val activity = activityBinding.activity
+            if (activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
+                    && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
+                    && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED) {
+
+                GpsUtils(activity).turnGPSOn {
+                    if (it) {
+                        onGranted();
+                    } else {
+                        onRefused("error_no_gps", "Gps need to be turned on to scan BT devices");
+                    }
+                    onPermissionGranted = null;
+                    onPermissionRefused = null;
+                }
+
+            } else {
+                onPermissionGranted = onGranted;
+                onPermissionRefused = onRefused;
+                ActivityCompat.requestPermissions(activityBinding.activity, arrayOf(ACCESS_FINE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN), REQUEST_PERMISSION)
+            }
+
+        } else {
+            onPermissionGranted = onGranted;
+            onPermissionRefused = onRefused;
+            val enableBT = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
+            activityBinding.activity.startActivityForResult(enableBT, REQUEST_BLUETOOTH)
         }
     }
 
@@ -175,46 +222,28 @@ class FlutterScanBluetoothPlugin
     }
 
     private fun scan(result: Result, returnBondedDevices: Boolean = false) {
-        if (adapter!!.isEnabled) {
-            val activity = activityBinding.activity
 
-            if (activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
-                    && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
-                    && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED) {
+        startPermissionValidation({
 
-                GpsUtils(activity).turnGPSOn {
-                    if (it) {
-                        if (adapter!!.isDiscovering) {
-                            // Bluetooth is already in modo discovery mode, we cancel to restart it again
-                            stopScan(null)
-                        }
-                        val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
-                        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
-                        activity.registerReceiver(receiver, filter)
-
-                        adapter!!.startDiscovery()
-                        var bondedDevices: List<Map<String, String>> = arrayListOf()
-                        if (returnBondedDevices) {
-                            bondedDevices = adapter!!.bondedDevices.mapNotNull { device ->
-                                toMap(device)
-                            }
-                        }
-                        result.success(bondedDevices)
-                    } else {
-                        result.error("error_no_gps", "Gps need to be turned on to scan BT devices", null)
-                    }
-                    pendingScanResult = null
-                }
-
-                pendingScanResult = result
-            } else {
-                pendingScanResult = result
-                ActivityCompat.requestPermissions(activityBinding.activity, arrayOf(ACCESS_FINE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN), REQUEST_PERMISSION)
+            if (adapter!!.isDiscovering) {
+                // Bluetooth is already in modo discovery mode, we cancel to restart it again
+                stopScan(null)
             }
-        } else {
-            val enableBT = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
-            pendingScanResult = result
-            activityBinding.activity.startActivityForResult(enableBT, REQUEST_BLUETOOTH)
-        }
+            val filter = IntentFilter(BluetoothDevice.ACTION_FOUND)
+            filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED)
+            activityBinding.activity.registerReceiver(receiver, filter)
+
+            adapter!!.startDiscovery()
+            var bondedDevices: List<Map<String, String>> = arrayListOf()
+            if (returnBondedDevices) {
+                bondedDevices = adapter!!.bondedDevices.mapNotNull { device ->
+                    toMap(device)
+                }
+            }
+            result.success(bondedDevices);
+
+        }, { code: String, message: String ->
+            result.error(code, message, null);
+        });
     }
 }
