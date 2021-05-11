@@ -66,6 +66,19 @@ class _MyAppState extends State<MyApp> {
                   }
                 }),
               ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Center(
+                child: RaisedButton(child: Text('Check permissions'), onPressed: () async {
+                  try {
+                      await _bluetooth.requestPermissions();
+                      print('All good with perms');
+                  } on PlatformException catch (e) {
+                    debugPrint(e.toString());
+                  }
+                }),
+              ),
             )
           ],
         ),
