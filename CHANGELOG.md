@@ -1,3 +1,8 @@
+## 2.0.1
+
+* Fix issue when activating BT
+* Add asking permission and enabling BT/GPS action
+
 ## 2.0.0
 
 * migrate to null safety
