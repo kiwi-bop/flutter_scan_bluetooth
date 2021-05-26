@@ -68,6 +68,7 @@ class FlutterScanBluetoothPlugin
 
     override fun onDetachedFromActivity() {
         activityBinding.removeRequestPermissionsResultListener(this)
+        activityBinding.removeActivityResultListener(this)
         onViewDestroy()
     }
 
@@ -83,6 +84,7 @@ class FlutterScanBluetoothPlugin
         } else {
             BluetoothAdapter.getDefaultAdapter()
         }
+        binding.addActivityResultListener(this)
         binding.addRequestPermissionsResultListener(this)
     }
 
