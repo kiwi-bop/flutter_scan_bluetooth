@@ -39,13 +39,13 @@ class FlutterScanBluetoothPlugin
         private const val ACTION_REQUEST_PERMISSIONS = "action_request_permissions"
     }
 
-    private lateinit var activityBinding: ActivityPluginBinding;
-    private lateinit var channel: MethodChannel;
+    private lateinit var activityBinding: ActivityPluginBinding
+    private lateinit var channel: MethodChannel
 
-    private var adapter: BluetoothAdapter? = null;
+    private var adapter: BluetoothAdapter? = null
 
-    private var onPermissionGranted: (() -> Unit)? = null;
-    private var onPermissionRefused: ((code: String, message: String) -> Unit)? = null;
+    private var onPermissionGranted: (() -> Unit)? = null
+    private var onPermissionRefused: ((code: String, message: String) -> Unit)? = null
 
     private val receiver = object : BroadcastReceiver() {
 
@@ -116,10 +116,10 @@ class FlutterScanBluetoothPlugin
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
         return if (requestCode == REQUEST_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
-                startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!);
+                startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!)
 
             } else {
-                onPermissionRefused!!("error_no_permission",  "Permission must be granted");
+                onPermissionRefused!!("error_no_permission",  "Permission must be granted")
             }
             true
         } else
@@ -130,7 +130,7 @@ class FlutterScanBluetoothPlugin
         return when (requestCode) {
             REQUEST_BLUETOOTH -> {
                 if (resultCode == Activity.RESULT_OK) {
-                    startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!);
+                    startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!)
 
                 } else {
                     onPermissionRefused!!("error_bluetooth_disabled", "Bluetooth is disabled")
@@ -139,7 +139,7 @@ class FlutterScanBluetoothPlugin
             }
             GpsUtils.GPS_REQUEST-> {
                 if (GpsUtils(activityBinding.activity).isGpsEnabled) {
-                    startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!);
+                    startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!)
 
                 } else {
                     onPermissionRefused!!("error_no_gps", "Gps need to be turned on to scan BT devices")
@@ -169,13 +169,13 @@ class FlutterScanBluetoothPlugin
 
     private fun validatePermissions(result: Result) {
         startPermissionValidation({
-            result.success(null);
+            result.success(null)
 
         }, {code: String, message: String ->
-            result.error(code, message, null);
-            onPermissionGranted = null;
-            onPermissionRefused = null;
-        });
+            result.error(code, message, null)
+            onPermissionGranted = null
+            onPermissionRefused = null
+        })
     }
 
     private fun startPermissionValidation(onGranted: (() -> Unit), onRefused: ((code: String, message: String) -> Unit)) {
@@ -188,23 +188,23 @@ class FlutterScanBluetoothPlugin
 
                 GpsUtils(activity).turnGPSOn {
                     if (it) {
-                        onGranted();
+                        onGranted()
                     } else {
-                        onRefused("error_no_gps", "Gps need to be turned on to scan BT devices");
+                        onRefused("error_no_gps", "Gps need to be turned on to scan BT devices")
                     }
-                    onPermissionGranted = null;
-                    onPermissionRefused = null;
+                    onPermissionGranted = null
+                    onPermissionRefused = null
                 }
 
             } else {
-                onPermissionGranted = onGranted;
-                onPermissionRefused = onRefused;
+                onPermissionGranted = onGranted
+                onPermissionRefused = onRefused
                 ActivityCompat.requestPermissions(activityBinding.activity, arrayOf(ACCESS_FINE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN), REQUEST_PERMISSION)
             }
 
         } else {
-            onPermissionGranted = onGranted;
-            onPermissionRefused = onRefused;
+            onPermissionGranted = onGranted
+            onPermissionRefused = onRefused
             val enableBT = Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE)
             activityBinding.activity.startActivityForResult(enableBT, REQUEST_BLUETOOTH)
         }
@@ -216,7 +216,8 @@ class FlutterScanBluetoothPlugin
         try {
             activityBinding.activity.unregisterReceiver(receiver)
         } catch (e: IllegalArgumentException) {
-            throw RuntimeException("Cannot stop Bluetooth scan before starting.")
+            Log.w(TAG, e)
+            //throw RuntimeException("Cannot stop Bluetooth scan before starting.")
         }
         result?.success(null)
     }
@@ -240,10 +241,10 @@ class FlutterScanBluetoothPlugin
                     toMap(device)
                 }
             }
-            result.success(bondedDevices);
+            result.success(bondedDevices)
 
         }, { code: String, message: String ->
-            result.error(code, message, null);
-        });
+            result.error(code, message, null)
+        })
     }
 }
