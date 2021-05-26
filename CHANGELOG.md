@@ -1,3 +1,8 @@
+## 1.2.1
+
+* Fix issue when activating BT
+* Add asking permission and enabling BT/GPS action
+
 ## 1.2.0
 
 * Fix bluethooth scan on android Q and more
