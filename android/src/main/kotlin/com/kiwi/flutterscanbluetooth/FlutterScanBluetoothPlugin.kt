@@ -187,7 +187,8 @@ class FlutterScanBluetoothPlugin
             if (activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
                     && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
                     && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED) {
-
+                onPermissionGranted = onGranted
+                onPermissionRefused = onRefused
                 GpsUtils(activity).turnGPSOn {
                     if (it) {
                         onGranted()

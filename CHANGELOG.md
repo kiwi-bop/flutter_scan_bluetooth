@@ -1,3 +1,7 @@
+## 1.2.2
+
+* Fix crash when GPS turned off
+
 ## 1.2.1
 
 * Fix issue when activating BT
