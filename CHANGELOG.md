@@ -1,3 +1,7 @@
+## 2.1.0
+
+* Update for android 12
+
 ## 2.0.2
 
 * Fix crash when GPS turned off
