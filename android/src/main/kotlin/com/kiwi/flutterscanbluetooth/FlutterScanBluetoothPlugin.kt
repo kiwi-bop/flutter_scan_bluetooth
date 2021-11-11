@@ -1,6 +1,5 @@
 package com.kiwi.flutterscanbluetooth
 
-import android.Manifest
 import android.Manifest.permission.*
 import android.app.Activity
 import android.bluetooth.BluetoothAdapter
@@ -107,7 +106,7 @@ class FlutterScanBluetoothPlugin
         var name = device.name ?: device.address
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && !name.contains("-LE")) {
-            name += if(device.type == DEVICE_TYPE_LE) "-LE" else ""
+            name += if (device.type == DEVICE_TYPE_LE) "-LE" else ""
         }
 
         map["name"] = name
@@ -121,7 +120,7 @@ class FlutterScanBluetoothPlugin
                 startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!)
 
             } else {
-                onPermissionRefused!!("error_no_permission",  "Permission must be granted")
+                onPermissionRefused!!("error_no_permission", "Permission must be granted")
             }
             true
         } else
@@ -139,7 +138,7 @@ class FlutterScanBluetoothPlugin
                 }
                 true
             }
-            GpsUtils.GPS_REQUEST-> {
+            GpsUtils.GPS_REQUEST -> {
                 if (GpsUtils(activityBinding.activity).isGpsEnabled) {
                     startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!)
 
@@ -173,7 +172,7 @@ class FlutterScanBluetoothPlugin
         startPermissionValidation({
             result.success(null)
 
-        }, {code: String, message: String ->
+        }, { code: String, message: String ->
             result.error(code, message, null)
             onPermissionGranted = null
             onPermissionRefused = null
@@ -184,9 +183,18 @@ class FlutterScanBluetoothPlugin
 
         if (adapter!!.isEnabled) {
             val activity = activityBinding.activity
-            if (activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
+
+            var isPermsOk = activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
                     && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
-                    && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED) {
+                    && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                isPermsOk = activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED
+                        && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
+                        && activity.checkCallingOrSelfPermission(BLUETOOTH_SCAN) == PERMISSION_GRANTED
+                        && activity.checkCallingOrSelfPermission(BLUETOOTH_CONNECT) == PERMISSION_GRANTED
+            }
+
+            if (isPermsOk) {
                 onPermissionGranted = onGranted
                 onPermissionRefused = onRefused
                 GpsUtils(activity).turnGPSOn {
@@ -202,7 +210,11 @@ class FlutterScanBluetoothPlugin
             } else {
                 onPermissionGranted = onGranted
                 onPermissionRefused = onRefused
-                ActivityCompat.requestPermissions(activityBinding.activity, arrayOf(ACCESS_FINE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN), REQUEST_PERMISSION)
+                var perms = arrayOf(ACCESS_FINE_LOCATION, BLUETOOTH, BLUETOOTH_ADMIN)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    perms = arrayOf(BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_SCAN, BLUETOOTH_CONNECT)
+                }
+                ActivityCompat.requestPermissions(activityBinding.activity, perms, REQUEST_PERMISSION)
             }
 
         } else {
