@@ -1,3 +1,7 @@
+## 2.1.1
+
+* Fix android 12 permission to enabling BT
+
 ## 2.1.0
 
 * Update for android 12
