@@ -1,3 +1,7 @@
+## 2.1.2
+
+* remove useless ACCESS_BACKGROUND_LOCATION permission
+
 ## 2.1.1
 
 * Fix android 12 permission to enabling BT
