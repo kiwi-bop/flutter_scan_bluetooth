@@ -1,4 +1,4 @@
-## 2.1.3
+## 2.1.4
 
 * Fix Android crash in certain race conditions on Android <=12
 
