@@ -100,7 +100,7 @@ class FlutterScanBluetoothPlugin
             if (adapter!!.isDiscovering) {
                 stopScan(null)
             }
-        })
+        }, onPermissionRefused!!)
     }
 
     private fun toMap(device: BluetoothDevice): Map<String, String> {
