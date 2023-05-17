@@ -1,3 +1,7 @@
+## 2.1.3
+
+* Fix Android crash in certain race conditions on Android <=12
+
 ## 2.1.2
 
 * remove useless ACCESS_BACKGROUND_LOCATION permission
