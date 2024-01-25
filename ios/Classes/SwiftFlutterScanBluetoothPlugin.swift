@@ -18,6 +18,8 @@ extension SwiftFlutterScanBluetoothPlugin: CBCentralManagerDelegate {
             print("central.state is .poweredOff")
         case .poweredOn:
             print("central.state is .poweredOn")
+        @unknown default:
+            break;
         }
     }
     
@@ -32,7 +34,7 @@ extension SwiftFlutterScanBluetoothPlugin: CBCentralManagerDelegate {
 }
 
 public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
-    var centralManager: CBCentralManager! = CBCentralManager(delegate: nil, queue: nil)
+    var centralManager: CBCentralManager?
     var bluetoothState: CBManagerState = .unknown
     let channel: FlutterMethodChannel
     var scanTimer: Timer?
@@ -40,7 +42,6 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
     init(_ channel: FlutterMethodChannel) {
         self.channel = channel
         super.init()
-        centralManager.delegate = self
     }
     
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -50,6 +51,11 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+        if(centralManager == nil){
+            centralManager = CBCentralManager(delegate: nil, queue: nil);
+        
+            centralManager?.delegate = self
+        }
         if(bluetoothState == .unsupported) {
             return result(FlutterError.init(code: "error_no_bt", message: nil, details: nil))
         }
@@ -59,12 +65,12 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
         
         switch call.method {
         case "action_start_scan":
-            if(centralManager.isScanning) {
+            if(centralManager?.isScanning ?? false) {
                 stopScan()
             }
-            centralManager.scanForPeripherals(withServices: nil, options: nil)
+            centralManager?.scanForPeripherals(withServices: nil, options: nil)
             
-            let bondedDevices = centralManager.retrieveConnectedPeripherals(withServices: [])
+            let bondedDevices = centralManager?.retrieveConnectedPeripherals(withServices: []) ?? []
             var res = [Dictionary<String, String>]()
             if(call.arguments as! Bool) {
                 for device in bondedDevices {
@@ -81,10 +87,14 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
         case "action_request_permissions":
             if(bluetoothState == .unauthorized) {
                 if #available(iOS 13.0, *) {
-                    switch centralManager.authorization {
+                    switch centralManager?.authorization {
                     case .denied, .restricted, .notDetermined:
                         return result(FlutterError.init(code: "error_no_permission", message: nil, details: nil))
                     case .allowedAlways:
+                        break;
+                    case nil:
+                        break;
+                    case .some(_):
                         break;
                     }
                 }
@@ -98,7 +108,7 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
     
     func stopScan() {
         scanTimer?.invalidate()
-        centralManager.stopScan()
+        centralManager?.stopScan()
         channel.invokeMethod("action_scan_stopped", arguments: nil)
     }
 }
