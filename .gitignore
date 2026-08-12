@@ -9,3 +9,6 @@ pubspec.lock
 build/
 *.iml
 .idea
+
+.build/
+.swiftpm/
