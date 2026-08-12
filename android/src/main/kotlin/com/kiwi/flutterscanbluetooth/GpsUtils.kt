@@ -51,10 +51,15 @@ class GpsUtils(private val context: Context) {
                             rae.startResolutionForResult(context, GPS_REQUEST)
                         } catch (sie: IntentSender.SendIntentException) {
                             Log.i(TAG, "PendingIntent unable to execute request.")
+                            onGpsListener?.gpsStatus(false)
                         }
                         LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE -> {
                             val errorMessage = "Location settings are inadequate, and cannot be fixed here. Fix in Settings."
                             Log.e(TAG, errorMessage)
+                            onGpsListener?.gpsStatus(false)
+                        }
+                        else -> {
+                            Log.e(TAG, "Unexpected location settings failure: statusCode=$statusCode", e)
                             onGpsListener?.gpsStatus(false)
                         }
                     }
