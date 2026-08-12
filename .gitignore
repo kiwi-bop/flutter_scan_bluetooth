@@ -12,3 +12,4 @@ build/
 
 .build/
 .swiftpm/
+.artifacts/
