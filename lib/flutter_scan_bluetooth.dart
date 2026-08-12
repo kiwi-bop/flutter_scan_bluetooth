@@ -9,11 +9,20 @@ class BluetoothDevice {
   final bool paired;
   final bool nearby;
 
-  const BluetoothDevice(this.name, this.address, {this.nearby = false, this.paired = false});
+  const BluetoothDevice(
+    this.name,
+    this.address, {
+    this.nearby = false,
+    this.paired = false,
+  });
 
   @override
   bool operator ==(Object other) =>
-      identical(this, other) || other is BluetoothDevice && runtimeType == other.runtimeType && name == other.name && address == other.address;
+      identical(this, other) ||
+      other is BluetoothDevice &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          address == other.address;
 
   @override
   int get hashCode => name.hashCode ^ address.hashCode;
@@ -32,16 +41,19 @@ class FlutterScanBluetooth {
   static final _singleton = FlutterScanBluetooth._();
   final MethodChannel _channel = const MethodChannel('flutter_scan_bluetooth');
   final List<BluetoothDevice> _pairedDevices = [];
-  final StreamController<BluetoothDevice> _controller = StreamController.broadcast();
+  final StreamController<BluetoothDevice> _controller =
+      StreamController.broadcast();
   final StreamController<bool> _scanStopped = StreamController.broadcast();
 
   factory FlutterScanBluetooth() => _singleton;
 
   FlutterScanBluetooth._() {
-    _channel.setMethodCallHandler((methodCall) async {
+    _channel.setMethodCallHandler((MethodCall methodCall) async {
       switch (methodCall.method) {
         case 'action_new_device':
-          _newDevice(methodCall.arguments);
+          if (methodCall.arguments != null) {
+            _newDevice(methodCall.arguments as Map<dynamic, dynamic>);
+          }
           break;
         case 'action_scan_stopped':
           _scanStopped.add(true);
@@ -59,12 +71,21 @@ class FlutterScanBluetooth {
     await _channel.invokeMethod('action_request_permissions');
   }
 
-  Future<void> startScan({pairedDevices = false}) async {
-    final bondedDevices = await _channel.invokeMethod('action_start_scan', pairedDevices);
-    for (var device in bondedDevices) {
-      final d = BluetoothDevice(device['name'], device['address'], paired: true);
-      _pairedDevices.add(d);
-      _controller.add(d);
+  Future<void> startScan({bool pairedDevices = false}) async {
+    final List<dynamic>? bondedDevices = await _channel.invokeMethod(
+      'action_start_scan',
+      pairedDevices,
+    );
+    if (bondedDevices != null) {
+      for (var device in bondedDevices) {
+        final d = BluetoothDevice(
+          device['name'],
+          device['address'],
+          paired: true,
+        );
+        _pairedDevices.add(d);
+        _controller.add(d);
+      }
     }
   }
 
@@ -75,12 +96,18 @@ class FlutterScanBluetooth {
 
   Future<void> stopScan() => _channel.invokeMethod('action_stop_scan');
 
-  void _newDevice(device) {
-    _controller.add(BluetoothDevice(
-      device['name'],
-      device['address'],
-      nearby: true,
-      paired: _pairedDevices.firstWhereOrNull((item) => item.address == device['address']) != null,
-    ));
+  void _newDevice(Map<dynamic, dynamic> device) {
+    _controller.add(
+      BluetoothDevice(
+        device['name'],
+        device['address'],
+        nearby: true,
+        paired:
+            _pairedDevices.firstWhereOrNull(
+              (item) => item.address == device['address'],
+            ) !=
+            null,
+      ),
+    );
   }
 }
