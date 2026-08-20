@@ -2,7 +2,7 @@ import Flutter
 import UIKit
 import CoreBluetooth
 
-extension SwiftFlutterScanBluetoothPlugin: CBCentralManagerDelegate {
+extension FlutterScanBluetoothPlugin: CBCentralManagerDelegate {
     public func centralManagerDidUpdateState(_ central: CBCentralManager) {
         bluetoothState = central.state
         switch central.state {
@@ -31,7 +31,8 @@ extension SwiftFlutterScanBluetoothPlugin: CBCentralManagerDelegate {
     }
 }
 
-public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
+@objc(FlutterScanBluetoothPlugin)
+public class FlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
     var centralManager: CBCentralManager! = CBCentralManager(delegate: nil, queue: nil)
     var bluetoothState: CBManagerState = .unknown
     let channel: FlutterMethodChannel
@@ -45,7 +46,7 @@ public class SwiftFlutterScanBluetoothPlugin: NSObject, FlutterPlugin {
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "flutter_scan_bluetooth", binaryMessenger: registrar.messenger())
-        let instance = SwiftFlutterScanBluetoothPlugin(channel)
+        let instance = FlutterScanBluetoothPlugin(channel)
         registrar.addMethodCallDelegate(instance, channel: channel)
     }
     

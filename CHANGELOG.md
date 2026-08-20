@@ -1,3 +1,11 @@
+## 3.0.0-beta.1
+
+* **BREAKING CHANGE**: Unified iOS plugin class to `FlutterScanBluetoothPlugin`.
+* **iOS**: Added support for Swift Package Manager (SPM).
+* **iOS**: Removed requirement for CocoaPods.
+* **Android**: Fixed `NoClassDefFoundError` by migrating `GpsUtils` to Kotlin.
+* **Android**: Improved stability of permission validation.
+
 ## 2.1.4
 
 * Fix Android crash in certain race conditions on Android <=12

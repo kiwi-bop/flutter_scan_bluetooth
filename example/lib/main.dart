@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_scan_bluetooth/flutter_scan_bluetooth.dart';
 
-void main() => runApp(new MyApp());
+void main() => runApp(MyApp());
 
 class MyApp extends StatefulWidget {
   @override
-  _MyAppState createState() => new _MyAppState();
+  _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
@@ -20,7 +20,7 @@ class _MyAppState extends State<MyApp> {
 
     _bluetooth.devices.listen((device) {
       setState(() {
-        _data += device.name+' (${device.address})\n';
+        _data += device.name + ' (${device.address})\n';
       });
     });
     _bluetooth.scanStopped.listen((device) {
@@ -33,53 +33,56 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return new MaterialApp(
-      home: new Scaffold(
-        appBar: new AppBar(
-          title: const Text('Plugin example app'),
-        ),
+    return MaterialApp(
+      home: Scaffold(
+        appBar: AppBar(title: const Text('Plugin example app')),
         body: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisAlignment: .start,
           children: <Widget>[
             Expanded(child: Text(_data)),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const .all(8.0),
               child: Center(
-                child: ElevatedButton(child: Text(_scanning ? 'Stop scan' : 'Start scan'), onPressed: () async {
-                  try {
-                    if(_scanning) {
-                      await _bluetooth.stopScan();
-                      debugPrint("scanning stoped");
-                      setState(() {
-                        _data = '';
-                      });
+                child: ElevatedButton(
+                  child: Text(_scanning ? 'Stop scan' : 'Start scan'),
+                  onPressed: () async {
+                    try {
+                      if (_scanning) {
+                        await _bluetooth.stopScan();
+                        debugPrint("scanning stopped");
+                        setState(() {
+                          _data = '';
+                        });
+                      } else {
+                        await _bluetooth.startScan(pairedDevices: false);
+                        debugPrint("scanning started");
+                        setState(() {
+                          _scanning = true;
+                        });
+                      }
+                    } on PlatformException catch (e) {
+                      debugPrint(e.toString());
                     }
-                    else {
-                      await _bluetooth.startScan(pairedDevices: false);
-                      debugPrint("scanning started");
-                      setState(() {
-                        _scanning = true;
-                      });
-                    }
-                  } on PlatformException catch (e) {
-                    debugPrint(e.toString());
-                  }
-                }),
+                  },
+                ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(8.0),
+              padding: const .all(8.0),
               child: Center(
-                child: RaisedButton(child: Text('Check permissions'), onPressed: () async {
-                  try {
+                child: ElevatedButton(
+                  child: Text('Check permissions'),
+                  onPressed: () async {
+                    try {
                       await _bluetooth.requestPermissions();
                       print('All good with perms');
-                  } on PlatformException catch (e) {
-                    debugPrint(e.toString());
-                  }
-                }),
+                    } on PlatformException catch (e) {
+                      debugPrint(e.toString());
+                    }
+                  },
+                ),
               ),
-            )
+            ),
           ],
         ),
       ),

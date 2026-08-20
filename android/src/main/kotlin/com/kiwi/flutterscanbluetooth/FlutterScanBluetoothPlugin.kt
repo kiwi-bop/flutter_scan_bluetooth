@@ -25,7 +25,7 @@ import io.flutter.plugin.common.PluginRegistry
 
 class FlutterScanBluetoothPlugin
     : FlutterPlugin, ActivityAware, MethodCallHandler, PluginRegistry.ActivityResultListener,
-        PluginRegistry.RequestPermissionsResultListener {
+    PluginRegistry.RequestPermissionsResultListener {
 
     companion object {
         private val TAG = FlutterScanBluetoothPlugin::class.java.name
@@ -50,7 +50,8 @@ class FlutterScanBluetoothPlugin
 
         override fun onReceive(context: Context, intent: Intent) {
             if (BluetoothDevice.ACTION_FOUND == intent.action) {
-                val device: BluetoothDevice? = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
+                val device: BluetoothDevice? =
+                    intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE)
                 if (device != null) {
                     channel.invokeMethod(ACTION_NEW_DEVICE, toMap(device))
                 }
@@ -78,11 +79,8 @@ class FlutterScanBluetoothPlugin
 
     override fun onAttachedToActivity(binding: ActivityPluginBinding) {
         activityBinding = binding
-        adapter = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2) {
+        adapter =
             (activityBinding.activity.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager).adapter
-        } else {
-            BluetoothAdapter.getDefaultAdapter()
-        }
         binding.addActivityResultListener(this)
         binding.addRequestPermissionsResultListener(this)
     }
@@ -107,7 +105,7 @@ class FlutterScanBluetoothPlugin
         val map = HashMap<String, String>()
         var name = device.name ?: device.address
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2 && !name.contains("-LE")) {
+        if (!name.contains("-LE")) {
             name += if (device.type == DEVICE_TYPE_LE) "-LE" else ""
         }
 
@@ -116,7 +114,11 @@ class FlutterScanBluetoothPlugin
         return map
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray): Boolean {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ): Boolean {
         return if (requestCode == REQUEST_PERMISSION) {
             if (grantResults.isNotEmpty() && grantResults[0] == PERMISSION_GRANTED) {
                 startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!)
@@ -140,15 +142,20 @@ class FlutterScanBluetoothPlugin
                 }
                 true
             }
+
             GpsUtils.GPS_REQUEST -> {
-                if (GpsUtils(activityBinding.activity).isGpsEnabled) {
+                if (GpsUtils(activityBinding.activity).isGpsEnabled()) {
                     startPermissionValidation(onPermissionGranted!!, onPermissionRefused!!)
 
                 } else {
-                    onPermissionRefused!!("error_no_gps", "Gps need to be turned on to scan BT devices")
+                    onPermissionRefused!!(
+                        "error_no_gps",
+                        "Gps need to be turned on to scan BT devices"
+                    )
                 }
                 true
             }
+
             else -> {
                 false
             }
@@ -158,7 +165,11 @@ class FlutterScanBluetoothPlugin
     override fun onMethodCall(call: MethodCall, result: Result) {
         Log.e(TAG, call.toString())
         if (adapter == null) {
-            result.error("error_no_bt", "Bluetooth adapter is null, BT is not supported on this device", null)
+            result.error(
+                "error_no_bt",
+                "Bluetooth adapter is null, BT is not supported on this device",
+                null
+            )
             return
         }
 
@@ -181,13 +192,17 @@ class FlutterScanBluetoothPlugin
         })
     }
 
-    private fun startPermissionValidation(onGranted: (() -> Unit), onRefused: ((code: String, message: String) -> Unit)) {
+    private fun startPermissionValidation(
+        onGranted: (() -> Unit),
+        onRefused: ((code: String, message: String) -> Unit)
+    ) {
 
         val activity = activityBinding.activity
 
-        var isPermsOk = activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
-                && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
-                && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED
+        var isPermsOk =
+            activity.checkCallingOrSelfPermission(ACCESS_FINE_LOCATION) == PERMISSION_GRANTED
+                    && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
+                    && activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             isPermsOk = activity.checkCallingOrSelfPermission(BLUETOOTH) == PERMISSION_GRANTED
                     && activity.checkCallingOrSelfPermission(BLUETOOTH_ADMIN) == PERMISSION_GRANTED
