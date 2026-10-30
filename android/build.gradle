@@ -24,6 +24,25 @@ rootProject.allprojects {
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
+def flutterSdkPath = {
+    def env = System.getenv('FLUTTER_ROOT')
+    if (env != null && !env.isEmpty()) {
+        return env
+    }
+    def localProperties = new Properties()
+    def localPropertiesFile = rootProject.file('../example/android/local.properties')
+    if (localPropertiesFile.exists()) {
+        localPropertiesFile.withInputStream { localProperties.load(it) }
+        def path = localProperties.getProperty('flutter.sdk')
+        if (path != null) {
+            return path
+        }
+    }
+    throw new GradleException('FLUTTER_ROOT / flutter.sdk not found for Android unit tests')
+}()
+
+def flutterJar = "${flutterSdkPath}/bin/cache/artifacts/engine/android-x64/flutter.jar"
+
 android {
     namespace "com.kiwi.flutterscanbluetooth"
     compileSdkVersion 34
@@ -34,16 +53,31 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '11'
+    }
+
+    sourceSets {
+        test.java.srcDirs += 'src/test/kotlin'
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources = true
+        unitTests.returnDefaultValues = true
     }
 }
 
 dependencies {
+    compileOnly files(flutterJar)
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'com.google.android.gms:play-services-location:21.0.1'
+
+    testImplementation files(flutterJar)
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mockito:mockito-core:5.11.0'
+    testImplementation 'org.mockito.kotlin:mockito-kotlin:5.2.1'
 }
