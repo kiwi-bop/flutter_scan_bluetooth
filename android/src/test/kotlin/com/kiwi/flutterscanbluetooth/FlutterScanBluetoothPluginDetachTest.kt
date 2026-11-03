@@ -13,11 +13,6 @@ import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.whenever
-
-/**
- * Regression for KIWI-MERCHANT-42B: destroying MainActivity with no active BT
- * permission/scan flow must not NPE in onDetachedFromActivity.
- */
 class FlutterScanBluetoothPluginDetachTest {
 
     private lateinit var plugin: FlutterScanBluetoothPlugin
