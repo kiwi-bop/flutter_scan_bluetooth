@@ -1,3 +1,7 @@
+## 3.0.0-beta.2
+
+* **Android**: Fixed `NullPointerException` in `onDetachedFromActivity` when no Bluetooth permission/scan flow is active (KIWI-MERCHANT-42B). Destroy now stops discovery safely and clears permission callbacks instead of forcing `onPermissionRefused!!`.
+
 ## 3.0.0-beta.1
 
 * **BREAKING CHANGE**: Unified iOS plugin class to `FlutterScanBluetoothPlugin`.
